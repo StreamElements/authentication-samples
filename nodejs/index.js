@@ -9,47 +9,9 @@ const seClientSecret = process.env.SE_CLIENT_SECRET
 const seRedirectURI = process.env.SE_REDIRECT_URI 
 const seScopes = 'channel:read'
 
-// Creating basic style to the page
-const style = ' \
-<style> \
-  html { \
-    background-color: #272626; \
-    color: #afaf87ff; \
-  } \
-  .seButton { \
-    text-decoration: none; \
-    border: 0.2px solid #000; \
-    color: #000; \
-    background: #8AE020; \
-    padding: 10px; \
-    margin: 20px \
-  } \
-  .authentication { \
-    display: flex; \
-    align-items: center; \
-    justify-content: center; \
-    flex-direction: column; \
-    font-size: 2em; \
-    font-family: monospace \
-  } \
-</style> \
-'
-
-const helloMessage = ' \
-<p> \
-  <h1>Hello!</h1> \
-</p> \
-'
-
-const loginButton = ' \
-<p> \
-<a href="/login" class="seButton">Login with Streamelements</a> \
-</p> \
-'
-
 // Home page
 app.get('/', async (req, res) => {
-  res.status(200).send(style + helloMessage + loginButton)
+  res.status(200).send('<a href="/login">Login with Streamelements</a>')
 })
 
 // Login page redirecting to streamelements authorization page
@@ -67,13 +29,8 @@ app.get('/login', async (req, res) => {
 // Callback page
 app.get('/callback', async (req, res) => {
   if (!req.query.code || req.query.error) {
-    const unauthorizedPage = ` \
-    <div class="authentication"> \
-      <p>Application not accepted</p> \
-      <a href="./../">Previous page</a> \
-    </div> \
-    `
-    res.status(401).send(style + unauthorizedPage)
+    console.log('Application not accepted')
+    res.status(401).send('Application not accepted')
     return
   }
 
@@ -82,14 +39,15 @@ app.get('/callback', async (req, res) => {
     const channelData = await getChannelData(data.access_token)
 
     const authenticatedPage = ` \
-    <div class="authentication"> \
       <h1>Authenticated!</h1>
-      <img style="border-radius: 50%;" src="${channelData.avatar}" /> \
-      <div><strong>Display Name:</strong> ${channelData.displayName}</div> \
-      <div><strong>Account ID:</strong> ${channelData._id}</div> \
-    </div> \
+      <img src="${channelData.avatar}" /> \
+      <div>Display Name: ${channelData.displayName}</div> \
+      <div>Account ID: ${channelData._id}</div> \
+      <div>Access Token: ${data.access_token}</div> \
+      <div>Refresh Token: ${data.refresh_token}</div> \
+      <div>Scope list: ${data.scope}</div> \
     `
-    res.status(200).send(style + authenticatedPage)
+    res.status(200).send(authenticatedPage)
 
   } catch (error) {
     res.status(200).send(error.code);
@@ -125,6 +83,7 @@ async function getChannelData(access_token) {
   return data
 }
 
+// Start the server
 const listener = app.listen(port, () => {
   console.log(`Listening on port ${listener.address().port}`)
 })
